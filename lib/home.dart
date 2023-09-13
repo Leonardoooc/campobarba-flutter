@@ -1,7 +1,16 @@
+import 'dart:convert';
+
 import 'package:campobarba/agendar.dart';
 import 'package:campobarba/cadastro.dart';
 import 'package:campobarba/dashboard.dart';
 import 'package:flutter/material.dart';
+import 'package:http/http.dart' as http;
+
+const request = "https://api.openweathermap.org/data/2.5/weather?lat=-25.407561&lon=-51.468791&appid=f17047134f597370f8f6d018a0a6715b";
+Future<Map> getData() async {
+  http.Response resposta = await http.get(Uri.parse(request));
+  return json.decode(resposta.body);
+}
 
 class home extends StatefulWidget {
   @override
@@ -38,6 +47,43 @@ class _homeState extends State<home> {
         child: ListView(
           shrinkWrap: true,
           children: <Widget>[
+            FutureBuilder<Map>(
+              future: getData(), 
+              builder: (context, snapshot) {
+                switch(snapshot.connectionState) {
+                  case ConnectionState.none:
+                  case ConnectionState.waiting:
+                    return Center(
+                      child: Text(
+                        "Loading weather data...",
+                        style: TextStyle(color: Colors.amber, fontSize: 20, fontFamily: 'Trebuchet MS'),
+                        textAlign: TextAlign.center,
+                      ),
+                    );
+                  default:
+                    var kelvin = snapshot.data!['main']['temp'];
+                    double celsius = (kelvin?.toDouble() - 273.15);
+
+                    return ListView(
+                      shrinkWrap: true,
+                      children: <Widget>[
+                        Padding(
+                          padding: EdgeInsets.only(top: 5),
+                          child: Row(
+                            children: <Widget>[
+                              Icon(Icons.cloudy_snowing, color: Colors.white, size: 30),
+                              Text(
+                                "${celsius.round()}°C",
+                                style: TextStyle(color: Colors.amber, fontSize: 25, fontFamily: 'Trebuchet MS'),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    );
+                }
+              }
+            ),
             Padding(
               padding: EdgeInsets.only(top: 10),
               child: Image(
