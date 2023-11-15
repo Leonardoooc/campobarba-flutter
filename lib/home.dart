@@ -71,7 +71,7 @@ class _homeState extends State<home> {
                           padding: EdgeInsets.only(top: 5),
                           child: Row(
                             children: <Widget>[
-                              Icon(Icons.cloudy_snowing, color: Colors.white, size: 30),
+                              Icon(Icons.cloud, color: Colors.white, size: 30),
                               Text(
                                 "${celsius.round()}°C",
                                 style: TextStyle(color: Colors.amber, fontSize: 25, fontFamily: 'Trebuchet MS'),
