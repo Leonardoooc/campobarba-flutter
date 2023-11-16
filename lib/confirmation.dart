@@ -1,6 +1,9 @@
 import 'package:campobarba/agendar.dart';
 import 'package:campobarba/home.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
 
 // ignore: must_be_immutable
 class confirmation extends StatefulWidget {
@@ -20,6 +23,8 @@ class _confirmationState extends State<confirmation> {
   String ?dateString;
   String ?timeString;
 
+  bool isSending = false;
+
   final barberNameController = TextEditingController();
   final typeController = TextEditingController();
   final dateController = TextEditingController();
@@ -38,16 +43,41 @@ class _confirmationState extends State<confirmation> {
     dateController.text = dateString.toString();
     timeController.text = timeString.toString();
   }
-  
-  void _onClickConfirm() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Agendado com sucesso.')),
-    );
-    Navigator.push(context, MaterialPageRoute(builder: (context) => home()));
-  }
 
   void _onClickCancel() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => agendar()));
+  }
+
+  Future<void> createAgendamento() async {
+    try {
+      setState(() {
+        isSending = !isSending;
+      });
+      String ?currEmail = await FirebaseAuth.instance.currentUser!.email;
+
+      await FirebaseFirestore.instance.collection('agendamentos').add({
+        'barbeiro': barberNameController.text, 
+        'data': dateController.text,
+        'horario': timeController.text,
+        'tipo': typeController.text,
+        'created': DateTime.now(),
+        'celular': currEmail,
+      });
+
+      setState(() {
+        isSending = !isSending;
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Agendado com sucesso.')),
+      );
+
+      Navigator.push(context, MaterialPageRoute(builder: (context) => home()));
+    } catch(e) {
+      setState(() {
+        isSending = !isSending;
+      });
+    }
   }
 
   @override
@@ -66,81 +96,116 @@ class _confirmationState extends State<confirmation> {
                 width: 150,
               )
             ),
+
+            Center(
+              widthFactor: 50.0,
+              heightFactor: 7.0,
+              child: Visibility(
+                visible: isSending,
+                maintainState: false,
+                child: LoadingAnimationWidget.stretchedDots(
+                  color: Colors.orangeAccent,
+                  size: 50,
+                ),
+              ),
+            ),
             Padding(
               padding: EdgeInsets.only(top: 30, left: 20, right: 20),
-              child: TextField(
-                textAlign: TextAlign.center,
-                controller: barberNameController,
-                decoration: InputDecoration(
-                  labelText: "Barbeiro",
-                  
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  controller: barberNameController,
+                  decoration: InputDecoration(
+                    labelText: "Barbeiro",
+                  ),
+                  readOnly: true,
+                  canRequestFocus: false,
                 ),
-                readOnly: true,
-                canRequestFocus: false,
-              ),
+              )
             ),
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-              child: TextField(
-                textAlign: TextAlign.center,
-                controller: typeController,
-                decoration: InputDecoration(
-                  labelText: "Tipo de Corte",
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  controller: typeController,
+                  decoration: InputDecoration(
+                    labelText: "Tipo de Corte",
+                  ),
+                  readOnly: true,
+                  canRequestFocus: false,
                 ),
-                readOnly: true,
-                canRequestFocus: false,
-              ),
+              )
             ),
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-              child: TextField(
-                textAlign: TextAlign.center,
-                controller: dateController,
-                decoration: InputDecoration(
-                  labelText: "Data",
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  controller: dateController,
+                  decoration: InputDecoration(
+                    labelText: "Data",
+                  ),
+                  readOnly: true,
+                  canRequestFocus: false,
                 ),
-                readOnly: true,
-                canRequestFocus: false,
-              ),
+              )
             ),
             Padding(
               padding: EdgeInsets.only(top: 20, left: 20, right: 20),
-              child: TextField(
-                textAlign: TextAlign.center,
-                controller: timeController,
-                decoration: InputDecoration(
-                  labelText: "Horário",
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: TextField(
+                  textAlign: TextAlign.center,
+                  controller: timeController,
+                  decoration: InputDecoration(
+                    labelText: "Horário",
+                  ),
+                  readOnly: true,
+                  canRequestFocus: false,
                 ),
-                readOnly: true,
-                canRequestFocus: false,
-              ),
+              )
             ),
 
             Padding(
               padding: EdgeInsets.only(top: 30, left: 40, right: 40),
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  fixedSize: Size(120, 60),
-                ),
-                onPressed: () => _onClickConfirm(),
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    fixedSize: Size(120, 60),
+                  ),
+                  onPressed: () => createAgendamento(),
 
-                child: Text('Confirmar'),
-              ),
+                  child: Text('Confirmar'),
+                ),
+              )
             ),
 
             Padding(
               padding: EdgeInsets.only(top: 20, left: 40, right: 40),
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  fixedSize: Size(120, 60),
-                  backgroundColor: Colors.amber.shade900
-                ),
-                onPressed: () => _onClickCancel(),
+              child: Visibility(
+                visible: !isSending,
+                maintainState: false,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    fixedSize: Size(120, 60),
+                    backgroundColor: Colors.amber.shade900
+                  ),
+                  onPressed: () => _onClickCancel(),
 
-                child: Text('Cancelar'),
-              ),
+                  child: Text('Cancelar'),
+                ),
+              )
             ),
-            
           ]
         )
       )

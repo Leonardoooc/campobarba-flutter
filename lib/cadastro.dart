@@ -1,5 +1,7 @@
 import 'package:campobarba/agendar.dart';
 import 'package:flutter/material.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class cadastro extends StatefulWidget {
   @override
@@ -20,6 +22,39 @@ class _cadastroState extends State<cadastro> {
         const SnackBar(content: Text('Cadastrado com sucesso.')),
       );
       Navigator.push(context, MaterialPageRoute(builder: (context) => agendar()));
+    }
+  }
+
+  Future<void> signUp() async {
+    if (!_formKey.currentState!.validate()) {
+      return;
+    }
+
+    try {
+      await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+
+      await FirebaseFirestore.instance.collection('users').add({'nome': emailController.text, 'phone': phoneController.text });
+      
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Cadastrado com sucesso.')),
+      );
+      Navigator.push(context, MaterialPageRoute(builder: (context) => agendar()));
+
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('A senha é fraca demais.')),
+        );
+      } else if (e.code == 'email-already-in-use') {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Esse email já está em uso.')),
+        );
+      }
+    } catch(e) {
+      print(e);
     }
   }
 
@@ -124,7 +159,7 @@ class _cadastroState extends State<cadastro> {
                 style: FilledButton.styleFrom(
                   fixedSize: Size(120, 60),
                 ),
-                onPressed: () => _onClickCadastro(),
+                onPressed: () => signUp(),
                 child: Text('Cadastrar'),
               ),
             ),

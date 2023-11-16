@@ -5,6 +5,10 @@ import 'package:campobarba/cadastro.dart';
 import 'package:campobarba/dashboard.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:loading_animation_widget/loading_animation_widget.dart';
+
 
 const request = "https://api.openweathermap.org/data/2.5/weather?lat=-25.407561&lon=-51.468791&appid=f17047134f597370f8f6d018a0a6715b";
 Future<Map> getData() async {
@@ -20,22 +24,53 @@ class home extends StatefulWidget {
 class _homeState extends State<home> {
   final passwordController = TextEditingController();
   final emailController = TextEditingController();
+
+  bool loggingIn = false;
   
   void _onClickCadastro() {
     Navigator.push(context, MaterialPageRoute(builder: (context) => cadastro()));
   }
 
-  void _onClickLogin() {
-    if (passwordController.text == "admin" && emailController.text == "admin") {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logado como ADMIN com sucesso.')),
+  Future<void> signIn() async {
+    try {
+      setState(() {
+        loggingIn = !loggingIn;
+      });
+      await FirebaseAuth.instance.signInWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
       );
-      Navigator.push(context, MaterialPageRoute(builder: (context) => dashboard()));
-    } else {
+
+      final firestore = FirebaseFirestore.instance;
+      final query = firestore.collection("admins").where("user", isEqualTo: emailController.text);
+
+      await query.get().then((QuerySnapshot<Map<String, dynamic>> snapshot) {
+        if (snapshot.docs.isNotEmpty) {
+          setState(() {
+            loggingIn = !loggingIn;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logado como ADMIN com sucesso.')),
+          );
+          Navigator.push(context, MaterialPageRoute(builder: (context) => dashboard()));
+        } else {
+          setState(() {
+            loggingIn = !loggingIn;
+          });
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Logado com sucesso.')),
+          );
+          Navigator.push(context, MaterialPageRoute(builder: (context) => agendar()));
+        }
+      });
+
+    } catch (e) {
+      setState(() {
+        loggingIn = !loggingIn;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Logado com sucesso.')),
+        const SnackBar(content: Text('Email ou Senha incorretos.')),
       );
-      Navigator.push(context, MaterialPageRoute(builder: (context) => agendar()));
     }
   }
 
@@ -54,10 +89,9 @@ class _homeState extends State<home> {
                   case ConnectionState.none:
                   case ConnectionState.waiting:
                     return Center(
-                      child: Text(
-                        "Loading weather data...",
-                        style: TextStyle(color: Colors.amber, fontSize: 20, fontFamily: 'Trebuchet MS'),
-                        textAlign: TextAlign.center,
+                      child: LoadingAnimationWidget.waveDots(
+                        color: Colors.orangeAccent,
+                        size: 20,
                       ),
                     );
                   default:
@@ -67,13 +101,15 @@ class _homeState extends State<home> {
                     return ListView(
                       shrinkWrap: true,
                       children: <Widget>[
-                        Padding(
-                          padding: EdgeInsets.only(top: 5),
+                        Center(
+                          heightFactor: 1.0,
                           child: Row(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            mainAxisAlignment: MainAxisAlignment.center,
                             children: <Widget>[
                               Icon(Icons.cloud, color: Colors.white, size: 30),
                               Text(
-                                "${celsius.round()}°C",
+                                " ${celsius.round()}°C",
                                 style: TextStyle(color: Colors.amber, fontSize: 25, fontFamily: 'Trebuchet MS'),
                               ),
                             ],
@@ -92,48 +128,76 @@ class _homeState extends State<home> {
                 width: 150,
               )
             ),
-            Padding(
-              padding: EdgeInsets.only(top: 60, left: 20, right: 20),
-              child: TextField(
-                controller: emailController,
-                decoration: InputDecoration(
-                  labelText: "Email",
+            Center(
+              widthFactor: 50.0,
+              heightFactor: 7.0,
+              child: Visibility(
+                visible: loggingIn,
+                maintainState: false,
+                child: LoadingAnimationWidget.staggeredDotsWave(
+                  color: Colors.orangeAccent,
+                  size: 50,
                 ),
-                keyboardType: TextInputType.emailAddress,
               ),
             ),
             Padding(
               padding: EdgeInsets.only(top: 60, left: 20, right: 20),
-              child: TextField(
-                controller: passwordController,
-                decoration: InputDecoration(
-                  labelText: "Senha",
+              child: Visibility(
+                visible: !loggingIn,
+                maintainState: false,
+                child: TextField(
+                  controller: emailController,
+                  decoration: InputDecoration(
+                    labelText: "Email",
+                  ),
+                  keyboardType: TextInputType.emailAddress,
                 ),
-                keyboardType: TextInputType.emailAddress,
-                obscureText: true,
-              ),
+              )
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 60, left: 20, right: 20),
+              child: Visibility(
+                visible: !loggingIn,
+                maintainState: false,
+                child: TextField(
+                  controller: passwordController,
+                  decoration: InputDecoration(
+                    labelText: "Senha",
+                  ),
+                  keyboardType: TextInputType.emailAddress,
+                  obscureText: true,
+                ),
+              )
             ),
             Padding(
               padding: EdgeInsets.only(top: 60, left: 40, right: 40),
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  fixedSize: Size(120, 60),
+              child: Visibility(
+                visible: !loggingIn,
+                maintainState: false,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    fixedSize: Size(120, 60),
+                  ),
+                  onPressed: () => signIn(),
+                  child: Text('Login'),
                 ),
-                onPressed: () => _onClickLogin(),
-                child: Text('Login'),
-              ),
+              )
             ),
 
             Padding(
               padding: EdgeInsets.only(top: 20, left: 40, right: 40, bottom: 100),
-              child: FilledButton(
-                style: FilledButton.styleFrom(
-                  fixedSize: Size(120, 60),
-                ),
-                onPressed: () => _onClickCadastro(),
+              child: Visibility(
+                visible: !loggingIn,
+                maintainState: false,
+                child: FilledButton(
+                  style: FilledButton.styleFrom(
+                    fixedSize: Size(120, 60),
+                  ),
+                  onPressed: () => _onClickCadastro(),
 
-                child: Text('Cadastro'),
-              ),
+                  child: Text('Cadastro'),
+                ),
+              )
             ),
           ]
         ),

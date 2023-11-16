@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "483538825357",
+    "project_id": "tickets-171e6",
+    "storage_bucket": "tickets-171e6.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:483538825357:android:d26625cad7ca90ef8cb2c4",
+        "android_client_info": {
+          "package_name": "com.example.campobarba"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "483538825357-0vf4rtkls04cvudq2l584mjm6vjccr45.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDd5oBu1a0goO1tLmsXnvBjM7VRIfTn_Nw"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "483538825357-0vf4rtkls04cvudq2l584mjm6vjccr45.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

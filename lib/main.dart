@@ -1,7 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:campobarba/home.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
 
-void main() {
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(
     MaterialApp(
       theme: ThemeData(
@@ -62,6 +68,13 @@ void main() {
             fontSize: 20.0
           ),
         ),
+
+        primaryTextTheme: TextTheme(
+          titleMedium: TextStyle(
+            color: Colors.amber, 
+            fontSize: 20.0
+          ),
+        )
       ),
       home: home(),
       debugShowCheckedModeBanner: false,
