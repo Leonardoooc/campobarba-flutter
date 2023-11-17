@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:loading_animation_widget/loading_animation_widget.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 // ignore: must_be_immutable
 class confirmation extends StatefulWidget {
@@ -24,6 +25,8 @@ class _confirmationState extends State<confirmation> {
   String ?timeString;
 
   bool isSending = false;
+
+  final player = AudioPlayer();
 
   final barberNameController = TextEditingController();
   final typeController = TextEditingController();
@@ -67,6 +70,9 @@ class _confirmationState extends State<confirmation> {
       setState(() {
         isSending = !isSending;
       });
+
+      const audioPath = "audios/success.mp3";
+      await player.play(AssetSource(audioPath));
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Agendado com sucesso.')),

@@ -2,6 +2,7 @@
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
 
 class dashboard extends StatefulWidget {
   @override
@@ -9,6 +10,7 @@ class dashboard extends StatefulWidget {
 }
 
 class _dashboardState extends State<dashboard> {
+  final player = AudioPlayer();
   final db = FirebaseFirestore.instance;
   String ?typeValue;
   String ?barberName;
@@ -16,6 +18,9 @@ class _dashboardState extends State<dashboard> {
   Future<void> deleteAgendamento(String docId) async {
     try {
       await db.collection('agendamentos').doc(docId).delete();
+
+      const audioPath = "audios/success.mp3";
+      await player.play(AssetSource(audioPath));
 
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(content: Text('Agendamento deletado com sucesso.')),
